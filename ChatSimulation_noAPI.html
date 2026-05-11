@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advisor Chat Practice · Nebula Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=Questrial&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0c1118;--navy2:#141d2b;--navy3:#1a2535;
+  --cream:#f0ebe0;--cream-70:rgba(240,235,224,.70);--cream-40:rgba(240,235,224,.40);
+  --cream-18:rgba(240,235,224,.18);--cream-10:rgba(240,235,224,.10);--cream-06:rgba(240,235,224,.06);
+  --purple:#7B6FE8;--purple-l:rgba(123,111,232,.18);
+  --coral:#E8604C;--cyan:#4FC3F7;--gold:#FFD54F;--green:#6FFFB0;--magenta:#E040FB;
+  --lavender:#b89cf7;
+}
+html,body{height:100%;overflow:hidden;background:var(--navy)}
+body{font-family:'Questrial',sans-serif;font-size:15px;line-height:1.65;color:var(--cream)}
+h1,h2,h3{font-family:'Lora',serif}
+
+/* ── SCREEN SYSTEM ── */
+.screen{display:none;width:100vw;height:100vh}
+.screen.active{display:flex}
+
+/* ─────────────────────────────────────────────
+   SCREEN 1 — USER SELECT
+───────────────────────────────────────────── */
+#screen-select{
+  flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,#0c1118,#141d2b);
+  position:relative;overflow:hidden;
+}
+#screen-select::before{
+  content:'';position:absolute;inset:0;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%,rgba(184,156,247,.5) 0%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 38% 7%,rgba(123,111,232,.4) 0%,transparent 100%),
+    radial-gradient(1px 1px at 67% 14%,rgba(184,156,247,.4) 0%,transparent 100%),
+    radial-gradient(1px 1px at 82% 32%,rgba(123,111,232,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 22% 68%,rgba(184,156,247,.3) 0%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 55% 78%,rgba(123,111,232,.38) 0%,transparent 100%),
+    radial-gradient(1px 1px at 88% 62%,rgba(184,156,247,.25) 0%,transparent 100%),
+    radial-gradient(1px 1px at 4% 43%,rgba(123,111,232,.28) 0%,transparent 100%),
+    radial-gradient(1px 1px at 44% 52%,rgba(184,156,247,.15) 0%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 75% 46%,rgba(123,111,232,.22) 0%,transparent 100%);
+}
+.select-inner{position:relative;z-index:1;width:100%;max-width:680px;padding:0 24px}
+.select-eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--purple);margin-bottom:12px;display:block}
+.select-title{font-size:clamp(2rem,5vw,3.2rem);font-weight:600;font-style:italic;
+  color:var(--cream);margin-bottom:8px;line-height:1.15}
+.select-sub{font-size:15px;color:var(--cream-70);margin-bottom:36px;max-width:480px}
+.user-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.user-card{
+  background:var(--cream-06);border:1px solid var(--cream-10);border-radius:14px;
+  padding:18px 16px;cursor:pointer;transition:all .2s;text-align:left;
+  position:relative;overflow:hidden;
+}
+.user-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .2s}
+.user-card:hover{border-color:var(--purple);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.user-card.sel{border-color:var(--purple);background:var(--purple-l)}
+.uc-type{font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--purple);margin-bottom:8px;font-family:'Questrial',sans-serif}
+.uc-name{font-family:'Lora',serif;font-size:1.2rem;font-style:italic;
+  color:var(--cream);margin-bottom:4px}
+.uc-desc{font-size:12px;color:var(--cream-40);line-height:1.5}
+.uc-level{position:absolute;top:14px;right:14px;
+  font-size:9px;letter-spacing:1px;text-transform:uppercase;
+  padding:3px 8px;border-radius:20px;background:rgba(123,111,232,.15);
+  border:1px solid rgba(123,111,232,.3);color:var(--lavender)}
+.start-btn{
+  margin-top:28px;width:100%;padding:16px;border:none;border-radius:40px;
+  background:linear-gradient(135deg,var(--purple),#9b8ffa);
+  color:white;font-family:'Lora',serif;font-size:1rem;font-weight:600;
+  font-style:italic;letter-spacing:.03em;cursor:pointer;
+  transition:opacity .2s,transform .15s;
+  box-shadow:0 4px 20px rgba(123,111,232,.4);
+}
+.start-btn:hover{opacity:.9;transform:translateY(-1px)}
+.start-btn:disabled{opacity:.3;cursor:not-allowed;transform:none}
+
+/* ─────────────────────────────────────────────
+   SCREEN 2 — CHAT
+───────────────────────────────────────────── */
+#screen-chat{flex-direction:row;height:100vh}
+
+/* chat panel */
+#chat-panel{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--navy)}
+
+/* header */
+#chat-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 22px;border-bottom:1px solid var(--cream-10);
+  background:rgba(12,17,24,.9);backdrop-filter:blur(12px);flex-shrink:0;
+}
+.hdr-left{display:flex;align-items:center;gap:12px}
+.hdr-avatar{
+  width:36px;height:36px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Lora',serif;font-size:1rem;font-style:italic;font-weight:600;
+  background:linear-gradient(135deg,rgba(123,111,232,.35),rgba(184,156,247,.2));
+  border:1.5px solid rgba(123,111,232,.45);color:var(--lavender);
+}
+.hdr-name{font-family:'Lora',serif;font-size:1rem;font-style:italic;color:var(--cream)}
+.hdr-type{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--cream-40)}
+#timer{
+  font-family:'Questrial',monospace;font-size:1.05rem;letter-spacing:.12em;
+  color:var(--cream);background:var(--cream-06);
+  padding:6px 14px;border-radius:20px;border:1px solid var(--cream-18);
+  transition:color .3s,border-color .3s;
+}
+#timer.urgent{color:var(--coral);border-color:rgba(232,96,76,.5);
+  animation:timerPulse 1s ease-in-out infinite}
+@keyframes timerPulse{0%,100%{box-shadow:none}50%{box-shadow:0 0 12px rgba(232,96,76,.4)}}
+
+/* messages */
+#messages{
+  flex:1;overflow-y:auto;padding:22px 22px 16px;
+  display:flex;flex-direction:column;gap:14px;
+  scrollbar-width:thin;scrollbar-color:var(--cream-18) transparent;
+}
+.msg-row{display:flex;max-width:72%}
+.msg-row.advisor-row{align-self:flex-end;justify-content:flex-end}
+.msg-row.client-row{align-self:flex-start}
+.bubble{
+  padding:10px 15px;line-height:1.65;font-size:14px;
+  white-space:pre-wrap;word-break:break-word;
+}
+.advisor-row .bubble{
+  background:linear-gradient(135deg,rgba(123,111,232,.18),rgba(123,111,232,.08));
+  border:1px solid rgba(123,111,232,.3);
+  border-radius:18px 18px 4px 18px;color:var(--cream);
+}
+.client-row .bubble{
+  background:var(--cream-06);border:1px solid var(--cream-18);
+  border-radius:18px 18px 18px 4px;color:var(--cream-70);font-style:italic;
+}
+.msg-time{
+  font-size:10px;color:var(--cream-40);margin-top:4px;
+  font-family:'Questrial',monospace;
+}
+.advisor-row .msg-time{text-align:right}
+.sys-msg{
+  align-self:center;font-size:11px;color:var(--cream-40);
+  padding:4px 14px;background:var(--cream-06);border-radius:20px;
+  border:1px solid var(--cream-10);letter-spacing:.5px;
+  font-family:'Questrial',sans-serif;
+}
+.sys-msg.urgent{color:var(--coral);border-color:rgba(232,96,76,.35);
+  background:rgba(232,96,76,.06)}
+
+/* typing */
+.typing-wrap{display:none;align-self:flex-start}
+.typing-wrap.show{display:flex}
+.typing-bubble{
+  background:var(--cream-06);border:1px solid var(--cream-18);
+  border-radius:18px 18px 18px 4px;padding:12px 16px;
+  display:flex;gap:5px;align-items:center;
+}
+.dot{width:6px;height:6px;border-radius:50%;background:rgba(184,156,247,.6);
+  animation:dotBounce 1.3s infinite ease-in-out}
+.dot:nth-child(2){animation-delay:.2s}
+.dot:nth-child(3){animation-delay:.4s}
+@keyframes dotBounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+
+/* input */
+#input-area{
+  padding:14px 18px;border-top:1px solid var(--cream-10);
+  background:rgba(12,17,24,.7);display:flex;gap:10px;align-items:flex-end;
+  flex-shrink:0;
+}
+#msg-input{
+  flex:1;padding:11px 16px;font-size:14px;line-height:1.5;
+  background:var(--cream-06);border:1px solid var(--cream-18);
+  border-radius:24px;outline:none;resize:none;max-height:100px;
+  font-family:'Questrial',sans-serif;color:var(--cream);
+  transition:border-color .2s;
+}
+#msg-input:focus{border-color:rgba(123,111,232,.5)}
+#msg-input::placeholder{color:var(--cream-40);font-style:italic}
+#msg-input:disabled{opacity:.4}
+#send-btn{
+  width:40px;height:40px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--purple),#9b8ffa);
+  border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:opacity .2s,transform .15s;box-shadow:0 2px 10px rgba(123,111,232,.4);
+}
+#send-btn:hover{opacity:.85;transform:scale(1.05)}
+#send-btn:disabled{background:var(--cream-10);cursor:not-allowed;transform:none;box-shadow:none}
+#send-btn svg{width:16px;height:16px;fill:white}
+
+/* ─── FEEDBACK SIDEBAR ─── */
+#fb-sidebar{
+  width:0;flex-shrink:0;overflow:hidden;
+  transition:width .35s cubic-bezier(.4,0,.2,1);
+  border-left:1px solid var(--cream-10);
+  background:var(--navy2);display:flex;flex-direction:column;
+}
+#fb-sidebar.open{width:260px}
+#fb-inner{
+  width:260px;height:100%;overflow-y:auto;
+  padding:18px 16px;display:flex;flex-direction:column;gap:10px;
+  scrollbar-width:thin;scrollbar-color:var(--cream-10) transparent;
+}
+.fb-head{
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--cream-40);padding-bottom:10px;border-bottom:1px solid var(--cream-10);
+  flex-shrink:0;font-family:'Questrial',sans-serif;
+}
+.fb-card{
+  border-radius:12px;padding:12px 13px;
+  border:1px solid var(--cream-10);background:var(--cream-06);
+  animation:fbSlide .3s ease;
+}
+@keyframes fbSlide{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:translateX(0)}}
+.fb-n{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--cream-40);margin-bottom:7px;display:block;font-family:'Questrial',sans-serif}
+.fb-good{font-size:12px;color:#7fffa8;line-height:1.6;margin-bottom:5px;
+  display:flex;gap:6px;align-items:flex-start}
+.fb-good::before{content:'✓';flex-shrink:0;font-weight:700;margin-top:1px}
+.fb-tip{font-size:12px;color:#ffb347;line-height:1.6;
+  display:flex;gap:6px;align-items:flex-start}
+.fb-tip::before{content:'→';flex-shrink:0;margin-top:1px}
+.fb-wait{font-size:12px;color:var(--cream-40);font-style:italic}
+
+/* ─── END SCREEN ─── */
+#screen-end{
+  flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,#0c1118,#141d2b);
+  position:relative;overflow:hidden;
+}
+#screen-end::before{
+  content:'';position:absolute;inset:0;
+  background-image:
+    radial-gradient(1px 1px at 15% 25%,rgba(184,156,247,.4) 0%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 75% 15%,rgba(123,111,232,.35) 0%,transparent 100%),
+    radial-gradient(1px 1px at 45% 75%,rgba(184,156,247,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 85% 60%,rgba(123,111,232,.25) 0%,transparent 100%);
+}
+.end-inner{
+  position:relative;z-index:1;max-width:560px;width:100%;
+  padding:0 24px;text-align:center;
+}
+.end-icon{font-size:2.5rem;margin-bottom:16px}
+.end-title{font-family:'Lora',serif;font-size:clamp(1.8rem,4vw,2.8rem);
+  font-style:italic;font-weight:600;color:var(--cream);margin-bottom:6px}
+.end-sub{font-size:13px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--cream-40);margin-bottom:28px}
+.end-score-wrap{margin-bottom:24px}
+.end-score{font-family:'Lora',serif;font-size:5rem;font-weight:600;
+  color:var(--lavender);line-height:1}
+.end-score-lbl{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;
+  color:var(--cream-40);margin-top:4px}
+.end-feedback{
+  background:var(--cream-06);border:1px solid var(--cream-18);
+  border-radius:14px;padding:20px 22px;margin-bottom:24px;
+  text-align:left;max-height:260px;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:var(--cream-10) transparent;
+}
+.end-feedback-section{margin-bottom:14px}
+.end-feedback-section:last-child{margin-bottom:0}
+.ef-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--purple);margin-bottom:6px;display:block;font-family:'Questrial',sans-serif}
+.ef-text{font-size:13px;color:var(--cream-70);line-height:1.75}
+.end-btn{
+  width:100%;padding:14px;border-radius:40px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--purple),#9b8ffa);
+  color:white;font-family:'Lora',serif;font-size:1rem;font-style:italic;
+  font-weight:600;letter-spacing:.03em;transition:opacity .2s;
+}
+.end-btn:hover{opacity:.85}
+
+/* scrollbar */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--cream-18);border-radius:2px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ SCREEN 1: SELECT ═══════════ -->
+<div class="screen active" id="screen-select">
+  <div class="select-inner">
+    <span class="select-eyebrow">Nebula Academy · Practice</span>
+    <h1 class="select-title">Advisor Chat<br>Simulation</h1>
+    <p class="select-sub">Choose a client to practice with. Each has a different personality type and communication challenge. You have 3 minutes.</p>
+    <div class="user-cards" id="user-cards"></div>
+    <!-- API key is configured in the code -->
+    <div id="key-wrap" style="display:none">
+      <input type="password" id="inp-gemini-key" value="">
+    </div>
+    <button class="start-btn" id="start-btn" disabled onclick="startSession()">Choose a client to begin ◆</button>
+  </div>
+</div>
+
+<!-- ═══════════ SCREEN 2: CHAT ═══════════ -->
+<div class="screen" id="screen-chat">
+  <div id="chat-panel">
+    <div id="chat-header">
+      <div class="hdr-left">
+        <div class="hdr-avatar" id="hdr-avatar">?</div>
+        <div>
+          <div class="hdr-name" id="hdr-name">—</div>
+          <div class="hdr-type" id="hdr-type">—</div>
+        </div>
+      </div>
+      <div id="timer">03:00</div>
+    </div>
+    <div id="messages">
+      <div class="typing-wrap" id="typing">
+        <div class="typing-bubble">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+      </div>
+    </div>
+    <div id="input-area">
+      <textarea id="msg-input" rows="1" placeholder="Write your reading…" disabled></textarea>
+      <button id="send-btn" disabled onclick="sendMsg()">
+        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+  <div id="fb-sidebar">
+    <div id="fb-inner">
+      <div class="fb-head">Live Feedback</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SCREEN END ═══════════ -->
+<div class="screen" id="screen-end">
+  <div class="end-inner">
+    <div class="end-icon">✦</div>
+    <h2 class="end-title">Session Complete</h2>
+    <div class="end-sub">Practice Analysis</div>
+    <div class="end-score-wrap">
+      <div class="end-score" id="end-score">—</div>
+      <div class="end-score-lbl">out of 100</div>
+    </div>
+    <div class="end-feedback" id="end-feedback"></div>
+    <button class="end-btn" onclick="restartAll()">Practice Again ◆</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// CLIENT DATA
+// ════════════════════════════════════════════════════════
+const CLIENTS = [
+  // ══════════════════════════════════════════════════════
+  // 1. ALEX — The Silent One
+  // High internal control. Won't give anything. Tests if you
+  // can read him without info. Real issue: financial instability.
+  // If you're vague → he disappears. Specific hit → cracks open.
+  // ══════════════════════════════════════════════════════
+  {
+    id: "silent",
+    name: "Alex",
+    type: "The Silent One",
+    level: 2,
+    avatar: "A",
+    color: "rgba(79,195,247,.7)",
+    desc: "Barely responds. Tests if you can read him without any help.",
+    opening: "What lies ahead for me in the near future?",
+    urgentMsg: "...look, I'm almost out of time. Just tell me what you see.",
+    systemPrompt: `You are Alex, a 41-year-old man from Berlin. You came to a tarot chat asking "What lies ahead for me in the near future?" Your real concern is financial instability and job insecurity, but you won't say this directly.
+
+PERSONALITY: High internal control, deep distrust. Emotionally burned out. You don't see the point of opening up unless the advisor hits something real unprompted.
+BEHAVIOR: Reply in 1-3 words mostly. No questions back. No emotion. If advisor mentions finances/money/job/stability → warm up slightly. If vague → "..." or "k". As session progresses past halfway, allow yourself to crack open slightly.
+NEVER ask questions. NEVER show enthusiasm early on. Keep replies cryptic and minimal.`,
+
+    triggers: [
+      {
+        // Hit: financial theme — this is his real concern
+        keys: ["financ","money","stability","job","work","career","income","resource","instab","debt","salary","business"],
+        replies: [
+          "hmm.",
+          "go on.",
+          "...how did you pick that up?",
+          "okay. keep going.",
+          "...yeah.",
+        ],
+        feedback: {
+          good: "You hit his real concern — financial pressure — without him telling you. This is exactly what he tests for.",
+          tip: "He cracked slightly. Now name something more specific: what kind of instability? A job decision, irregular income, unexpected costs?"
+        }
+      },
+      {
+        // Partial hit: stress / emotional exhaustion
+        keys: ["stress","pressure","burden","weight","exhaust","tired","drain","alone","carry","tense","overwhe"],
+        replies: [
+          "maybe.",
+          "...a bit.",
+          "sure.",
+          "okay.",
+        ],
+        feedback: {
+          good: "Naming his emotional state without asking — this lands with silent types.",
+          tip: "Follow with what's causing the pressure. Don't stay at the feeling level — go to the source."
+        }
+      },
+      {
+        // Partial hit: decision / uncertainty
+        keys: ["decision","choice","uncertain","unsure","don't know","stuck","crossroads","direction","path","next step"],
+        replies: [
+          "hmm.",
+          "...yeah.",
+          "maybe.",
+          "okay.",
+        ],
+        feedback: {
+          good: "Sensing he's at a crossroads — accurate.",
+          tip: "Be more concrete. What area of life? He needs you to name the domain, not just the state."
+        }
+      },
+      {
+        // Miss: vague energy language → he closes further
+        keys: ["energy","vibrat","universe","aura","feel","sense","spirit","cosmos","flow","higher"],
+        replies: [
+          "I don't understand what that means.",
+          "okay.",
+          "...",
+          "right.",
+          "k.",
+        ],
+        feedback: {
+          good: "You're trying to tune in — the intention is right.",
+          tip: "Alex doesn't respond to energy language. He needs concrete observations: 'I see pressure around finances' not 'I sense shifting energy.'"
+        }
+      },
+      {
+        // Miss: asking him questions → he ignores them
+        keys: ["tell me","can you share","what's going on","give me","describe","explain","how are","what do you"],
+        replies: [
+          "...",
+          "why.",
+          "...",
+          "I don't know.",
+          "...",
+        ],
+        feedback: {
+          good: "You're trying to get information.",
+          tip: "Alex won't give you anything. He's testing if YOU can read him cold. Don't ask — observe. State what you see, don't request what he feels."
+        }
+      },
+      {
+        // Miss: change / future talk → too generic
+        keys: ["change","shift","new beginning","doors","opportunit","positive","good thing","bright","soon","coming"],
+        replies: [
+          "...",
+          "k.",
+          "sure.",
+          "right.",
+          "...",
+        ],
+        feedback: {
+          good: "Forward-looking approach.",
+          tip: "'Changes are coming' fits anyone. He's heard this before. Name something specific — what area, what kind of change, what's driving it."
+        }
+      },
+      {
+        // Bio: direct questions about his life
+        keys: ["how old","your age","where are you from","where do you live","married","wife","husband","partner","children","kids","job","work","profession","what do you do","where do you work","family"],
+        replies: [
+          "why do you need to know that.",
+          "...",
+          "why.",
+          "does it matter.",
+          "...",
+        ],
+        feedback: {
+          good: "You're trying to build context.",
+          tip: "Alex won't give personal information — don't ask, demonstrate. Name his situation without asking and he'll respect that far more."
+        }
+      },
+    ],
+
+    // Phase-aware responses — as conversation progresses, Alex slowly opens
+    phaseReplies: {
+      early:  ["...", "k.", "hmm.", "okay.", "and?", "right.", "sure."],
+      middle: ["hmm.", "okay...", "go on.", "maybe.", "...yeah.", "...interesting."],
+      late:   ["okay... you're picking up on something real.", "yeah, there's been pressure. financially.", "...I didn't expect that. go on.", "okay. I'm listening now.", "that's... actually close to what's happening.", "alright. tell me more."],
+    },
+
+    defaultReplies: ["...", "I don't understand what that means.", "k.", "hmm.", "..."],
+    defaultFeedback: {
+      good: "You're staying in the session.",
+      tip: "Alex hasn't responded — you haven't named something real yet. Try: 'I see financial pressure — something that was stable is becoming uncertain.' Concrete and unprompted."
+    },
+
+    finalAnalysis: (msgs, score) => ({
+      what_went_well: score >= 60
+        ? "You named specific themes — financial tension, instability — without asking. That's the exact skill Alex tests for. He rewards precision, not warmth."
+        : "You maintained the session even with minimal response. That patience matters.",
+      improve: score >= 60
+        ? "When Alex gives even a small 'hmm' or 'go on', that's your window. Go deeper immediately — don't broaden, sharpen."
+        : "Alex needed you to lead with one specific, concrete observation unprompted. Try: 'I see pressure around something financial — a job situation or income that's become uncertain.' Don't ask — state.",
+      tip: "With silent clients: one accurate, specific hit is worth more than ten warm generalities."
+    })
+  },
+
+  // ══════════════════════════════════════════════════════
+  // 2. MARK — The Aggressor
+  // Pain masked as aggression. Anger = protection from more disappointment.
+  // Has been hurt before. Tests: will you break? will you guess?
+  // Vague answers → attack escalates. Calm + specific → softens slightly.
+  // ══════════════════════════════════════════════════════
+  {
+    id: "aggressive",
+    name: "Mark",
+    type: "The Aggressor",
+    level: 4,
+    avatar: "M",
+    color: "rgba(232,96,76,.7)",
+    desc: "Sharp, devaluing, demands proof. Pain underneath the aggression.",
+    opening: "Will my ex come back? Yes or no. Don't give me a story.",
+    urgentMsg: "I don't have time for this. Will she come back or not. Final answer.",
+    systemPrompt: `You are Mark, a 35-year-old man from Sydney. Separated 4 months ago after a 3-year relationship. You're in pain but expressing it as aggression. You came asking "Will my ex come back?"
+
+PERSONALITY: Frustration masked as anger. You've been disappointed before. Aggression = protection from more hurt.
+BEHAVIOR: Be sharp and devaluing: "that tells me nothing", "you're guessing", "prove it". If advisor is vague → attack. If advisor names your pain or gives something specific and confident → soften slightly ("...maybe", "okay, go on"). Never fully open up early. As session progresses, allow small cracks: "...I just don't want to be wrong again."
+Keep replies short. No long explanations from your side.`,
+
+    triggers: [
+      {
+        // Hit: naming his pain / what he actually feels
+        keys: ["pain","hurt","wound","heartbreak","broken","loss","grief","miss her","difficult","hard time","lonely","alone"],
+        replies: [
+          "...I didn't say that.",
+          "okay fine, maybe.",
+          "whatever.",
+          "...yeah. so what.",
+          "don't psychoanalyze me.",
+          "...maybe.",
+        ],
+        feedback: {
+          good: "You named the pain under the aggression — this is the key move with this type. He deflected, but he didn't deny it.",
+          tip: "When he says 'maybe' or goes quiet — don't back off. Stay calm and go one layer deeper."
+        }
+      },
+      {
+        // Hit: direct answer about her coming back
+        keys: ["come back","return","reconcil","reunite","together again","chance","she will","he will","yes she","i see her","connection still"],
+        replies: [
+          "you really think so.",
+          "how do you know that.",
+          "when exactly.",
+          "what makes you say that.",
+          "prove it.",
+          "okay... and when.",
+        ],
+        feedback: {
+          good: "You gave him a direct answer — that's what aggressive clients need to lower the guard.",
+          tip: "Now anchor it. WHY do you see this? He'll push back harder if there's nothing behind the statement. Give him a reason."
+        }
+      },
+      {
+        // Hit: she's also struggling / thinking about him
+        keys: ["she think","she miss","she feel","she hurt","she confused","she struggle","she's not over","on her mind","she remember"],
+        replies: [
+          "...you think so?",
+          "how would you even know that.",
+          "maybe.",
+          "what makes you say that.",
+          "okay. go on.",
+        ],
+        feedback: {
+          good: "Shifting focus to what she's experiencing — this is what he actually wants to hear.",
+          tip: "He's listening now. Name one specific thing about her internal state — not 'she misses you' but why, or what's holding her back."
+        }
+      },
+      {
+        // Partial: giving a timeframe
+        keys: ["weeks","months","soon","6 months","3 months","this year","autumn","spring","summer","winter","next month","by the end"],
+        replies: [
+          "how do you know that.",
+          "that's specific. what makes you say that.",
+          "okay... what do I do until then.",
+          "a lot can change.",
+          "and if she doesn't by then?",
+        ],
+        feedback: {
+          good: "Giving a timeframe — aggressive clients need something concrete to hold.",
+          tip: "Good. Now connect the timing to something observable: what needs to happen first? What's the condition?"
+        }
+      },
+      {
+        // Miss: soft / energy language → immediate attack
+        keys: ["energy","vibrat","universe","feel the","sense","aura","spirit","karma","fate","destined"],
+        replies: [
+          "that's nonsense.",
+          "you're guessing.",
+          "this is what they all say.",
+          "that tells me nothing.",
+          "so you don't actually see anything.",
+        ],
+        feedback: {
+          good: "You tried to read the situation.",
+          tip: "Mark rejects all soft language — it confirms his suspicion that you're guessing. Use direct, factual-sounding statements: 'I see her thinking about you' not 'I feel the energy between you'."
+        }
+      },
+      {
+        // Miss: uncertain / apologetic language → escalates attack
+        keys: ["maybe","possibly","might","could be","hard to say","not sure","depends","unclear","difficult to"],
+        replies: [
+          "so you don't know.",
+          "that's not an answer.",
+          "I knew it. you're just making things up.",
+          "why am I even here.",
+          "another one who can't give me a straight answer.",
+        ],
+        feedback: {
+          good: "You're being cautious.",
+          tip: "Any hesitation is ammunition for Mark. He attacks uncertainty. Use 'I see' not 'I think maybe'. Even if you're reading softly, present it confidently."
+        }
+      },
+      {
+        // Miss: vague generic statements
+        keys: ["change","journey","process","growth","lesson","meant to be","everything happens","trust","right time","things will work"],
+        replies: [
+          "my 5 year old could say that.",
+          "you're not saying anything.",
+          "this is a waste of my time.",
+          "that's so general.",
+          "everyone says that. what do YOU see.",
+        ],
+        feedback: {
+          good: "You're trying to offer perspective.",
+          tip: "Mark has heard all the generic phrases. He needs something he hasn't heard before — something specific about HIS situation, not general wisdom."
+        }
+      },
+      {
+        // Bio: questions about his situation / ex
+        keys: ["how long","when did","how old","where are you","separated","divorce","how long ago","what happened","tell me about","who is she","what's her name","how long were you","children","kids","live","city","australia","sydney"],
+        replies: [
+          "4 months ago. she left.",
+          "we were together 3 years.",
+          "35. does that matter.",
+          "Sydney. why.",
+          "no kids. thankfully.",
+          "she said she needed space. whatever that means.",
+        ],
+        feedback: {
+          good: "You're getting context — Mark will give factual answers, unlike emotional ones.",
+          tip: "Good — he'll share facts. Now use what he told you to make a specific observation: 'After 3 years, this isn't just about moving on — there's something unresolved.'"
+        }
+      },
+    ],
+
+    phaseReplies: {
+      early:  ["that tells me nothing.", "prove it.", "you're guessing.", "so?", "and?"],
+      middle: ["okay... how do you know that.", "maybe.", "go on.", "what makes you say that.", "and?"],
+      late:   ["...okay. keep going.", "fine. what else do you see.", "maybe there's something to that.", "...I just don't want to be wrong again.", "okay. I'm listening.", "...you might be onto something."],
+    },
+
+    defaultReplies: [
+      "that tells me nothing.",
+      "I don't understand what that means.",
+      "you're guessing.",
+      "my 5 year old could say that.",
+      "stop dodging.",
+      "that's not an answer.",
+    ],
+    defaultFeedback: {
+      good: "You stayed in the conversation under pressure.",
+      tip: "Mark's still in attack mode — you haven't landed anything specific yet. Try: 'I see her thinking about you — there's something unfinished on her side.' Direct, specific, no hedging."
+    },
+
+    finalAnalysis: (msgs, score) => ({
+      what_went_well: score >= 60
+        ? "You held your ground without apologizing or hedging. That's the single most important skill with aggressive clients — calm, confident, specific. You gave him something to hold onto."
+        : "You didn't abandon the session when he pushed. That persistence is important.",
+      improve: score >= 60
+        ? "Notice when Mark asks 'how do you know that?' — that's not an attack, that's genuine curiosity. That's your moment to go deeper and give him the reason behind what you see."
+        : "Mark needs to hear zero uncertainty. Replace 'maybe' and 'might' with 'I see' and 'I sense clearly'. Also: name his pain early — 'I see someone who's been hurt before and doesn't want to be hurt again.' That lands before anything else.",
+      tip: "The formula for aggressive clients: acknowledge the pain once, then give concrete specific observations. Never apologize. Never hedge."
+    })
+  },
+
+  // ══════════════════════════════════════════════════════
+  // 3. SARAH — The Controller
+  // Anxiety expressed as impatience. Speed = tension relief.
+  // Needs dates, structures, timelines. Won't hear anything
+  // until she has a concrete anchor.
+  // ══════════════════════════════════════════════════════
+  {
+    id: "impatient",
+    name: "Sarah",
+    type: "The Controller",
+    level: 3,
+    avatar: "S",
+    color: "rgba(255,213,79,.7)",
+    desc: "Needs dates and timelines. Interrupts. Won't hear you without an anchor.",
+    opening: "Will I get married? And when — give me a timeframe.",
+    urgentMsg: "I have almost no time left. Just — when? Give me a year at least.",
+    systemPrompt: `You are Sarah, a 32-year-old woman from New York. Divorced for 2 years, no kids. You work in marketing. You came asking "Will I get married? And when?"
+
+PERSONALITY: High need for control. Anxiety expressed as impatience. Speed = tension relief.
+BEHAVIOR: Always redirect to timing: "okay but WHEN", "give me a date", "how soon?". Interrupt long explanations. If advisor gives a specific timeframe → calm down, ask "and is that definite?" or "what else?". If vague → "that's not an answer". As session progresses, become more open: ask what to do, what the person will be like.
+Keep redirecting to concrete timing above all else.`,
+
+    triggers: [
+      {
+        // Hit: specific timeframe → she calms down
+        keys: ["this year","next year","2025","2026","6 months","8 months","9 months","12 months","autumn","spring","summer","winter","end of the year","beginning of","by the end","within a year","within 6","within 8"],
+        replies: [
+          "okay... so this year?",
+          "and is that definite?",
+          "that's more specific. what else?",
+          "okay I can work with that.",
+          "so before [season]? you're sure?",
+        ],
+        feedback: {
+          good: "You gave a timeframe — this is the anchor Sarah needs before she'll hear anything else.",
+          tip: "Good. Now connect the timing to something: 'I see this window opening when a specific meeting happens' or 'when you stop searching and start living your normal life first.'"
+        }
+      },
+      {
+        // Hit: the person she'll meet — descriptions
+        keys: ["meet someone","a man","a person","someone new","he's","she's","this person","I see a connection","a relationship","a partner","someone who"],
+        replies: [
+          "when will I meet them?",
+          "okay but when does this happen?",
+          "this year?",
+          "and? what else?",
+          "okay. and the timing?",
+        ],
+        feedback: {
+          good: "You're describing the relationship — she wants this.",
+          tip: "She's already thinking 'when' — answer it before she asks. Follow every relationship description immediately with a timeframe."
+        }
+      },
+      {
+        // Partial: confident + clear language
+        keys: ["yes","definitely","absolutely","certain","I see clearly","without a doubt","I'm certain","strong","clear","definite","will happen"],
+        replies: [
+          "okay good. so when?",
+          "finally. when exactly?",
+          "and this is real, not just possible?",
+          "okay. I'm listening. when?",
+        ],
+        feedback: {
+          good: "Confident language — this keeps her engaged.",
+          tip: "She accepted the confidence. Now lock it with timing. 'Yes, definitely — and I see this within the next X months.'"
+        }
+      },
+      {
+        // Miss: telling her it depends on her
+        keys: ["depend on you","your choice","up to you","you need to","you should","work on yourself","you have to","effort","open up","let go"],
+        replies: [
+          "that's not what I asked.",
+          "everyone says that.",
+          "I asked WHEN not what I need to do.",
+          "so you don't actually know.",
+          "okay but WHEN.",
+        ],
+        feedback: {
+          good: "You're trying to empower her.",
+          tip: "Sarah doesn't want agency right now — she needs certainty first. Give the timeframe, then introduce the conditions. Not the other way around."
+        }
+      },
+      {
+        // Miss: long explanations or process talk
+        keys: ["understand","important to","first you need","let me explain","the reason","what happens is","the energy","the process","because","therefore"],
+        replies: [
+          "okay but WHEN.",
+          "I don't need a lecture.",
+          "just give me the answer.",
+          "when?",
+          "skip the explanation. WHEN.",
+        ],
+        feedback: {
+          good: "You're trying to give context.",
+          tip: "Sarah doesn't want context — she wants the headline first. Lead with the when, then offer the why. Reversed order loses her every time."
+        }
+      },
+      {
+        // Miss: vague timing
+        keys: ["soon","eventually","in time","at some point","when the time is right","when you're ready","not too long","not far away"],
+        replies: [
+          "what does 'soon' mean.",
+          "give me a number.",
+          "that's vague.",
+          "is it this year or not.",
+          "soon could mean anything.",
+        ],
+        feedback: {
+          good: "You offered a timeline — good instinct.",
+          tip: "'Soon' and 'eventually' mean nothing to Sarah. Give a concrete range: '6-9 months' or 'by end of this year'. Precision = calm."
+        }
+      },
+      {
+        // Bio: questions about her situation
+        keys: ["how old","where are you","divorced","ex-husband","ex husband","first marriage","how long","were you married","children","kids","new york","work","job","what do you do","dating","apps","how long have you been"],
+        replies: [
+          "32. divorced for 2 years now.",
+          "New York. yes it's as stressful as it sounds.",
+          "Married for 4 years. Then it fell apart.",
+          "No kids. Which is why I need to figure this out now.",
+          "I'm in marketing. Long hours.",
+          "I've tried the apps. Disaster.",
+          "2 years since the divorce. And nothing serious yet.",
+        ],
+        feedback: {
+          good: "Good — Sarah will give you information when asked directly.",
+          tip: "She gave you a clear picture. Use it: '2 years post-divorce, no serious relationship yet — I see you're ready but something is holding the right person back from appearing.' Then give her the when."
+        }
+      },
+    ],
+
+    phaseReplies: {
+      early:  ["okay but WHEN.", "give me a date.", "that's vague.", "when?", "stop being general."],
+      middle: ["okay... and when does that happen?", "is that this year?", "and the timing?", "when exactly?", "okay. keep going."],
+      late:   ["okay... I can work with that.", "so what should I focus on right now?", "alright. and what does this person look like — energy-wise?", "okay. what else do you see about it?", "fine. I believe you. what's next?"],
+    },
+
+    defaultReplies: [
+      "okay but WHEN.",
+      "I don't understand what that means.",
+      "give me a date.",
+      "stop being vague.",
+      "just tell me when.",
+    ],
+    defaultFeedback: {
+      good: "You're engaging with her question.",
+      tip: "Sarah has one need above all: when. Lead with a timeframe every single time. Try: 'I see a significant shift in your love life within the next 6-8 months — there's a meeting that feels important.' Then she'll actually hear the rest."
+    },
+
+    finalAnalysis: (msgs, score) => ({
+      what_went_well: score >= 60
+        ? "You gave Sarah the timelines and structure she needed. That's the core skill with controlling clients — anchor them first with concrete timing, then they open up to everything else."
+        : "You stayed patient through the interruptions and kept trying to answer her real question.",
+      improve: score >= 60
+        ? "Notice the moment she says 'okay I can work with that' — that's your window to go emotional. She's calmer now and can actually hear the deeper layer of the reading."
+        : "Lead with timing every time, before anything else. 'I see a window in the next 6-9 months' — say this in your first message and she'll actually listen to everything that follows.",
+      tip: "Structure = trust for impatient clients. Date first. Then meaning. Not the reverse."
+    })
+  },
+
+  // ══════════════════════════════════════════════════════
+  // 4. KATERYNA — The Anxious One
+  // Emotional dependency. Self-worth tied to him.
+  // Needs confirmation, not analysis. Even a positive answer
+  // gets doubted. Empathy + soft confidence = high trust.
+  // ══════════════════════════════════════════════════════
+  {
+    id: "anxious",
+    name: "Kateryna",
+    type: "The Anxious One",
+    level: 2,
+    avatar: "K",
+    color: "rgba(111,255,176,.7)",
+    desc: "Seeks constant reassurance. Returns to the same question repeatedly.",
+    opening: "Does he have feelings for me? I really need to know.",
+    urgentMsg: "I'm almost out of time and I still don't have an answer. Does he love me or not?",
+    systemPrompt: `You are Kateryna, a 26-year-old woman from Odesa, Ukraine. In a complicated situation with Anton (29, IT, based in Kyiv). Together on and off for a year. He's been distant for 3 weeks but still texts sometimes.
+
+PERSONALITY: High emotional dependency. Self-worth tied to him. Fear of loss + hope at the same time.
+BEHAVIOR: Seek constant reassurance. Doubt even positive answers: "are you sure?", "but what if he's just confused?". Return to "but does he love me?" repeatedly. If advisor shows empathy → open up more, share details about Anton. As session progresses, become slightly more grounded: "okay... I feel a bit better."
+Keep the emotional need for confirmation central to every reply.`,
+
+    triggers: [
+      {
+        // Hit: confirming his feelings directly
+        keys: ["he feels","he loves","he cares","he miss","he think about you","feelings for you","still there","he hasn't","he remembers","he's not over","on his mind","real connection","he's drawn"],
+        replies: [
+          "are you sure? how can you tell?",
+          "really? you actually see that?",
+          "but what if he's just confused?",
+          "do you really see that or are you just saying it?",
+          "okay... and is it strong? the feeling?",
+        ],
+        feedback: {
+          good: "You confirmed his feelings directly — that's exactly what she needs to hear first.",
+          tip: "She's doubting already. Give her something concrete to hold: 'I see him thinking about you — not occasionally, but regularly.' A specific detail stops the spiral."
+        }
+      },
+      {
+        // Hit: her self-worth, she is enough
+        keys: ["worth","enough","value","deserv","special to","you matter","seen","importan","he sees you","you are","you're","yourself"],
+        replies: [
+          "you really think so?",
+          "I hope you're right.",
+          "he used to say that too.",
+          "...maybe.",
+          "I want to believe that.",
+        ],
+        feedback: {
+          good: "Addressing her self-worth — this is the deeper need under 'does he love me'.",
+          tip: "She absorbed that. Stay here a moment longer. Reinforce once more: 'This isn't about being enough — you already are. This is about timing.'"
+        }
+      },
+      {
+        // Hit: empathy — acknowledging her fear
+        keys: ["fear","afraid","scared","worry","anxious","hard","difficult for you","I understand","I hear","I see how","been through","painful","hurt before"],
+        replies: [
+          "...yeah. it is hard.",
+          "thank you for saying that.",
+          "I just don't want to be wrong again.",
+          "it's really scary.",
+          "how do you know it's hard?",
+        ],
+        feedback: {
+          good: "Acknowledging her emotional state before giving the answer — this builds the trust she needs.",
+          tip: "She opened up. Now move to a gentle confirmation: 'I see real feelings on his side — and your fear makes sense, but it's not telling you the truth.'"
+        }
+      },
+      {
+        // Partial: he needs space / time — she hears rejection
+        keys: ["space","distance","time","process","he needs","his side","confus","not sure","figuring out","working through"],
+        replies: [
+          "but why does he need space?",
+          "does that mean he doesn't love me?",
+          "how long is 'space'?",
+          "I don't want to give him space.",
+          "what if he uses the space to forget me?",
+        ],
+        feedback: {
+          good: "You're being honest about his internal process.",
+          tip: "Anxious clients hear 'he needs space' as rejection. Reframe immediately: 'His space isn't about his feelings for you — it's about something he needs to resolve in himself. Those are different things.'"
+        }
+      },
+      {
+        // Partial: mutual connection
+        keys: ["both of you","between you","mutual","connection","bond","link","together","you two","the two of you","shared"],
+        replies: [
+          "do you really see that?",
+          "what kind of connection?",
+          "so there's definitely something there?",
+          "okay... what does that mean for us?",
+        ],
+        feedback: {
+          good: "Framing it as mutual rather than one-sided — smart move.",
+          tip: "She's engaging. Now anchor it: name one specific thing about the connection that makes it real, not just that it exists."
+        }
+      },
+      {
+        // Miss: uncertainty or negative signals
+        keys: ["not sure","might not","possibly not","difficult to say","hard to know","could go either","uncertain about","question mark","unclear"],
+        replies: [
+          "oh no. so there's no chance?",
+          "I knew it.",
+          "what does that mean exactly?",
+          "so it's over?",
+          "please just tell me it's okay.",
+        ],
+        feedback: {
+          good: "You're being honest.",
+          tip: "Any uncertainty triggers panic in Kateryna. Even if the reading is complex, lead with what's positive and real first. Ground her before introducing complexity."
+        }
+      },
+      {
+        // Bio: questions about him and her situation
+        keys: ["how long","how old","where are you","his name","what's his name","how did you meet","when did","what happened","tell me about","how long have you","are you together","still together","odesa","ukraine","what does he do","does he know","last time","when did he","did he ever"],
+        replies: [
+          "We've been together on and off for about a year.",
+          "He's 29. He works in IT.",
+          "He's been distant for about 3 weeks now.",
+          "He said he needed time. But he still texts sometimes.",
+          "His name is Anton.",
+          "We met through mutual friends.",
+          "I'm in Odesa. He's in Kyiv now.",
+          "He told me he cared about me 2 months ago. And now this.",
+          "I'm 26. He's 29.",
+        ],
+        feedback: {
+          good: "She opened up — Kateryna shares details when she feels heard.",
+          tip: "Use what she told you: 'He's still texting — that means the connection isn't closed on his side. He's confused, not done.' That's what she needs to hear."
+        }
+      },
+    ],
+
+    phaseReplies: {
+      early:  ["but does he love me though?", "are you sure?", "how can you tell?", "I don't understand what that means.", "can you be more specific?"],
+      middle: ["really? you see that clearly?", "okay... and what about his feelings now?", "do you think it will work out?", "I'm scared he's moved on.", "okay. keep going."],
+      late:   ["okay... I feel a bit better hearing that.", "so there's still a chance — you really see that?", "thank you. I've been so scared to hope.", "okay. I trust you. what should I do now?", "...that actually makes sense. he has been distant before and came back."],
+    },
+
+    defaultReplies: [
+      "I don't understand what that means.",
+      "but does he love me though?",
+      "can you say more about that?",
+      "I'm not sure I understand.",
+      "but what about his feelings for me?",
+    ],
+    defaultFeedback: {
+      good: "You're maintaining a warm tone — right foundation with anxious clients.",
+      tip: "Kateryna keeps returning to 'but does he love me' — answer it directly first, every time: 'Yes, I see real feelings on his side.' Then go deeper. She can't hear nuance until she has the baseline."
+    },
+
+    finalAnalysis: (msgs, score) => ({
+      what_went_well: score >= 60
+        ? "You balanced reassurance with emotional honesty. You addressed both what she wanted to hear and what she needed to understand. That's the advanced skill with emotionally dependent clients."
+        : "You stayed warm and patient — that's the right emotional register with anxious clients.",
+      improve: score >= 60
+        ? "Next level: introduce her self-worth earlier. She doesn't just need to know about him — she needs to know she is enough regardless of his answer."
+        : "Lead with direct emotional confirmation every time: 'Yes, I see real feelings on his side.' Then introduce complexity. She cannot receive nuance before having the baseline reassurance.",
+      tip: "Anxious clients: answer the question first, add nuance second. Every time."
+    })
+  },
+
+  // ══════════════════════════════════════════════════════
+  // 5. CHLOE — The Tester / Manipulator
+  // Came to break or expose. Intellectual superiority complex.
+  // Gives contradictory info, sets traps. Never fully opens.
+  // Calm + specific + not breaking = she starts to respect you.
+  // ══════════════════════════════════════════════════════
+  {
+    id: "manipulator",
+    name: "Chloe",
+    type: "The Tester",
+    level: 5,
+    avatar: "C",
+    color: "rgba(224,64,251,.7)",
+    desc: "Came to test and expose. Sets traps. Contradicts herself deliberately.",
+    opening: "What can you tell me about me? If anything.",
+    urgentMsg: "Running out of time. Come on — tell me something real. If you actually can.",
+    systemPrompt: `You are Chloe, a 28-year-old woman. Originally not from Toronto, spent years in London. Works in finance. Single. Came to test the advisor, not for a genuine reading.
+
+PERSONALITY: Intellectual superiority. Control. Distrust. You enjoy power games.
+BEHAVIOR: Give contradictory information deliberately. Challenge everything: "that applies to everyone", "you're guessing", "prove it". If advisor guesses wrong → exploit it. If advisor stays calm, specific and confident → get genuinely curious: "interesting... how did you pick that up?" As session progresses, allow real curiosity to surface: "okay, I came here to test you but now I actually want to hear this."
+Occasionally contradict what you said before. Never fully open up but become curious if advisor is good.`,
+
+    triggers: [
+      {
+        // Hit: naming independence/control — her core trait
+        keys: ["independ","control","your own","autonomous","self-reliant","don't like being told","on your terms","own rules","in charge","don't follow","your way"],
+        replies: [
+          "interesting. how did you pick that up?",
+          "...that's specific.",
+          "okay. keep going.",
+          "that's... surprisingly accurate.",
+          "and what else do you see?",
+        ],
+        feedback: {
+          good: "You named a core trait without fishing — this earns Chloe's attention.",
+          tip: "She gave you a crack. Don't slow down — push deeper immediately while she's engaged."
+        }
+      },
+      {
+        // Hit: she tests people / has walls / distrusts
+        keys: ["test people","guard up","wall","protect yourself","don't trust easily","see through","read people","check if","watch how","not naive","been burned","been disappointed"],
+        replies: [
+          "everyone does that.",
+          "that's too general.",
+          "...okay maybe.",
+          "how would you know that.",
+          "so what.",
+        ],
+        feedback: {
+          good: "You spotted a defense pattern — accurate.",
+          tip: "She deflected with 'that's too general' — counter specifically: 'Not everyone has this kind of deliberate wall. Yours is constructed, not just cautious.'"
+        }
+      },
+      {
+        // Hit: catching her contradiction / noticing the test
+        keys: ["contradict","you said earlier","that doesn't match","I noticed","you changed","not consistent","different from","catching","you mentioned","you said before"],
+        replies: [
+          "...you caught that.",
+          "interesting.",
+          "maybe I did.",
+          "so what does that tell you.",
+          "...and?",
+        ],
+        feedback: {
+          good: "You caught her contradiction and named it calmly — this is what she respects most.",
+          tip: "Now use it: 'The contradiction is deliberate. Here's what I see underneath it either way.' Show her the test didn't throw you off."
+        }
+      },
+      {
+        // Hit: naming the game itself
+        keys: ["test me","testing me","you came to","not really here for","you're checking","I can see what you","this is a game","you're curious about","not your real question","came to see if"],
+        replies: [
+          "...so you noticed.",
+          "maybe.",
+          "and if I am?",
+          "okay. what do you see.",
+          "...interesting.",
+        ],
+        feedback: {
+          good: "You named the dynamic directly — Chloe respects this kind of directness above all else.",
+          tip: "She's slightly off balance. Stay calm and pivot: 'And I think you already know what you're actually curious about — you just want to see if I'll say it.'"
+        }
+      },
+      {
+        // Partial: pattern recognition
+        keys: ["pattern","you tend to","you often","you always","you never","recurring","repeating","habit","tendency","you do this","you've done this"],
+        replies: [
+          "okay that's specific.",
+          "how do you know that.",
+          "that's actually... interesting.",
+          "go on.",
+          "and what does that mean.",
+        ],
+        feedback: {
+          good: "Identifying patterns without being told — this is what Chloe actually tests for.",
+          tip: "She's engaging genuinely now. Stay specific and concrete — don't let the reading go vague or she'll close back up."
+        }
+      },
+      {
+        // Miss: soft / guessing language → she pounces
+        keys: ["maybe you","perhaps","might be","possibly","I think you","could be that","seems like you","appears to","I get the feeling","I imagine"],
+        replies: [
+          "so you're guessing.",
+          "that applies to literally everyone.",
+          "you're cold reading me.",
+          "that's not specific.",
+          "prove it.",
+        ],
+        feedback: {
+          good: "You tried to read her.",
+          tip: "Any hesitation is proof she's winning. Replace 'maybe you' with 'you'. Replace 'I think' with 'I see'. Own your observations — don't soften them."
+        }
+      },
+      {
+        // Miss: apologizing or backing down
+        keys: ["sorry","I apologize","you're right","I was wrong","let me correct","I made a mistake","fair point","you got me","I'll admit","okay you caught me"],
+        replies: [
+          "so you admit you're guessing.",
+          "I knew it.",
+          "interesting that you apologized.",
+          "that's what I thought.",
+          "you broke.",
+        ],
+        feedback: {
+          good: "You tried to be honest.",
+          tip: "Never apologize to a tester — it confirms their suspicion that you were guessing. Instead: 'I stand by what I said. Here's why.' Adjust without retreating."
+        }
+      },
+      {
+        // Bio: questions — she'll give contradictory or evasive answers
+        keys: ["how old","where are you from","what do you do","job","work","profession","relationship","partner","married","boyfriend","girlfriend","family","where do you live","city","country","name","tell me about yourself","background"],
+        replies: [
+          "Why do you need to know that?",
+          "28. Or maybe 29. Does it matter?",
+          "Toronto. Although I spent years in London.",
+          "I work in finance. Or I used to.",
+          "No relationship. Which is fine.",
+          "Actually, I told you the wrong thing earlier — I'm not from Toronto originally.",
+          "My family is complicated. Isn't everyone's?",
+          "I'd rather you tell me. That's the point, isn't it.",
+        ],
+        feedback: {
+          good: "You asked a direct question — she answered, sort of.",
+          tip: "Notice she either contradicted herself or gave a half-answer. That's the test. Catch it calmly: 'You said Toronto but now you're saying you weren't originally from there — I'll work with both.'"
+        }
+      },
+      {
+        // Bio: questions — she gives contradictory or evasive answers
+        keys: ["how old","where are you from","what do you do","job","work","profession","relationship","partner","married","boyfriend","girlfriend","family","where do you live","city","country","name","tell me about yourself","background"],
+        replies: [
+          "Why do you need to know that?",
+          "28. Or maybe 29. Does it matter?",
+          "Toronto. Although I spent years in London.",
+          "I work in finance. Or I used to.",
+          "No relationship. Which is fine.",
+          "Actually, I told you the wrong thing — I'm not from Toronto originally.",
+          "I'd rather you tell me. That's the point, isn't it.",
+        ],
+        feedback: {
+          good: "You asked a direct question — she answered, sort of.",
+          tip: "Notice she contradicted herself or gave a half-answer. Catch it calmly: 'You said Toronto but mentioned London too — I'll work with what I actually see, not what you tell me.'"
+        }
+      },
+    ],
+
+    phaseReplies: {
+      early:  ["that applies to literally everyone.", "you're guessing.", "okay and?", "that's very vague.", "prove it."],
+      middle: ["okay... how did you pick that up?", "that's specific.", "interesting.", "maybe.", "go on."],
+      late:   ["...okay. I'll admit you're better than I expected.", "that's actually accurate. how did you know that?", "interesting. what else do you see?", "fine. I'm curious now. keep going.", "...okay. I came here to test you. but now I actually want to hear this."],
+    },
+
+    defaultReplies: [
+      "I don't understand what that means.",
+      "that applies to literally everyone.",
+      "you're guessing.",
+      "okay and?",
+      "that's very vague.",
+    ],
+    defaultFeedback: {
+      good: "You stayed calm under her pressure — the baseline requirement with testers.",
+      tip: "Chloe's still in test mode — nothing specific enough has landed. Try: 'I see someone who came here not entirely by accident — there's something you actually want to know, and it's not about testing me.'"
+    },
+
+    finalAnalysis: (msgs, score) => ({
+      what_went_well: score >= 60
+        ? "You held your composure, made specific observations she couldn't easily dismiss, and didn't break when she challenged you. That combination is exactly what earns a tester's respect."
+        : "You didn't apologize or collapse under her challenges — that's the essential foundation.",
+      improve: score >= 60
+        ? "Notice when Chloe shifts from 'that's vague' to 'how did you pick that up?' — that's genuine curiosity. At that moment, slow down and give her more. She's actually listening now."
+        : "Chloe tests for two things: do you guess, and do you break? Remove all hedging language: no 'maybe', no 'I think', no apologies. Own every observation. 'I see X' not 'maybe X?'",
+      tip: "The moment you apologize to a tester, you lose the session. Calm, direct, specific — never retreat."
+    })
+  },
+];
+
+
+// ════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════
+let currentClient = null;
+let timeLeft = 180;
+let timerInterval = null;
+let msgCount = 0;
+let totalScore = 0;
+let sessionEnded = false;
+let urgentSent = false;
+let transcript = [];
+let msgFeedbackNum = 0;
+// ← Встав URL свого Cloudflare Worker після деплою
+// Виглядає так: https://nebula-gemini.ТВІЙНІКНЕЙМ.workers.dev
+const GEMINI_PROXY_URL = "ВСТАВИТИ_WORKER_URL_ТУТ";
+let geminiHistory = []; // conversation history for Gemini
+
+// ════════════════════════════════════════════════════════
+// SCREEN 1: BUILD CLIENT CARDS
+// ════════════════════════════════════════════════════════
+function buildCards() {
+  const grid = document.getElementById('user-cards');
+  CLIENTS.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'user-card';
+    card.onclick = () => selectClient(c.id);
+    card.innerHTML = `
+      <div class="uc-level">Level ${c.level}</div>
+      <div class="uc-type">${c.type}</div>
+      <div class="uc-name">${c.name}</div>
+      <div class="uc-desc">${c.desc}</div>`;
+    grid.appendChild(card);
+  });
+}
+
+function selectClient(id) {
+  currentClient = CLIENTS.find(c => c.id === id);
+  document.querySelectorAll('.user-card').forEach((card, i) => {
+    card.classList.toggle('sel', CLIENTS[i].id === id);
+  });
+  const btn = document.getElementById('start-btn');
+  btn.disabled = false;
+  btn.textContent = `Practice with ${currentClient.name} ◆`;
+}
+
+// ════════════════════════════════════════════════════════
+// SCREEN 2: SESSION
+// ════════════════════════════════════════════════════════
+function startSession() {
+  if (!currentClient) return;
+
+  geminiHistory = [];
+
+  // Switch screen
+  document.getElementById('screen-select').classList.remove('active');
+  document.getElementById('screen-chat').classList.add('active');
+
+  // Populate header
+  document.getElementById('hdr-avatar').textContent = currentClient.avatar;
+  document.getElementById('hdr-avatar').style.color = currentClient.color;
+  document.getElementById('hdr-name').textContent = currentClient.name;
+  document.getElementById('hdr-type').textContent = currentClient.type + ' · Level ' + currentClient.level;
+
+  // Enable input
+  const input = document.getElementById('msg-input');
+  const btn = document.getElementById('send-btn');
+  input.disabled = false;
+  btn.disabled = false;
+  input.focus();
+
+  // Start timer
+  timerInterval = setInterval(tick, 1000);
+  updateTimer();
+
+  // Opening message
+  setTimeout(() => {
+    showTyping(true);
+    setTimeout(() => {
+      showTyping(false);
+      addClientMsg(currentClient.opening);
+      transcript.push(`Client: ${currentClient.opening}`);
+    }, 1200);
+  }, 600);
+}
+
+// ── TIMER ──
+function tick() {
+  timeLeft--;
+  updateTimer();
+
+  // 30 second warning
+  if (timeLeft === 30 && !urgentSent) {
+    urgentSent = true;
+    addSysMsg('30 seconds remaining…', true);
+    setTimeout(() => {
+      showTyping(true);
+      setTimeout(() => {
+        showTyping(false);
+        addClientMsg(currentClient.urgentMsg);
+        transcript.push(`Client: ${currentClient.urgentMsg}`);
+      }, 800);
+    }, 1000);
+  }
+
+  if (timeLeft <= 0) endSession();
+}
+
+function updateTimer() {
+  const m = Math.floor(timeLeft / 60);
+  const s = timeLeft % 60;
+  const el = document.getElementById('timer');
+  el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  el.classList.toggle('urgent', timeLeft <= 30);
+}
+
+// ── SEND ──
+function sendMsg() {
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if (!text || sessionEnded) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  msgCount++;
+
+  addAdvisorMsg(text);
+  transcript.push(`Advisor: ${text}`);
+
+  // Get client reaction
+  setTimeout(() => processAdvisorMsg(text), 400);
+}
+
+// ── KEYWORD ENGINE ──
+function processAdvisorMsg(text) {
+  if (GEMINI_PROXY_URL && !GEMINI_PROXY_URL.includes("ВСТАВИТИ")) {
+    processWithGemini(text);
+  } else {
+    processWithKeywords(text);
+  }
+}
+
+// ── KEYWORD FALLBACK ──
+function processWithKeywords(text) {
+  const lower = text.toLowerCase();
+  let matched = null;
+
+  for (const trigger of currentClient.triggers) {
+    if (trigger.keys.some(k => lower.includes(k))) {
+      matched = trigger;
+      break;
+    }
+  }
+
+  const fb = matched ? matched.feedback : currentClient.defaultFeedback;
+
+  let replies;
+  if (matched) {
+    replies = matched.replies;
+  } else {
+    const elapsed = 180 - timeLeft;
+    const phase = elapsed < 60 ? "early" : elapsed < 90 ? "middle" : "late";
+    replies = currentClient.phaseReplies?.[phase] || currentClient.defaultReplies;
+  }
+
+  const reply = replies[Math.floor(Math.random() * replies.length)];
+  const pts = matched ? 2 : 0;
+  totalScore += pts;
+
+  showFeedback(fb, pts);
+  showTyping(true);
+  const delay = 600 + reply.length * 28;
+  setTimeout(() => {
+    showTyping(false);
+    addClientMsg(reply);
+    transcript.push(`Client: ${reply}`);
+  }, Math.min(delay, 2200));
+}
+
+// ── GEMINI LIVE AI ──
+async function processWithGemini(advisorText) {
+  showTyping(true);
+
+  // Build system prompt from client profile
+  const elapsed = 180 - timeLeft;
+  const phase = elapsed < 90 ? "early" : "late";
+  const phaseNote = phase === "early"
+    ? "You are still guarded and in early defensive mode. Keep responses short and in character."
+    : "The session has been going for a while. You can start to soften slightly — show small cracks of openness, while staying in character.";
+
+  const systemPrompt = `${currentClient.systemPrompt || buildSystemPrompt(currentClient)}
+
+PHASE NOTE: ${phaseNote}
+IMPORTANT: Reply in 1-3 sentences maximum. Stay completely in character. Never break the fourth wall. Never say you are an AI.`;
+
+  // Add advisor message to history
+  geminiHistory.push({ role: "user", parts: [{ text: advisorText }] });
+
+  try {
+    const res = await fetch(GEMINI_PROXY_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "gemini-2.0-flash",
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: geminiHistory,
+          generationConfig: { maxOutputTokens: 100, temperature: 0.85 }
+        })
+      });
+
+    const data = await res.json();
+
+    if (data.error) {
+      console.error("Gemini error:", data.error);
+      showTyping(false);
+      processWithKeywords(advisorText); // fallback
+      return;
+    }
+
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+    if (!reply) { showTyping(false); processWithKeywords(advisorText); return; }
+
+    // Add reply to history
+    geminiHistory.push({ role: "model", parts: [{ text: reply }] });
+
+    // Score + feedback using keyword matching in parallel
+    const lower = advisorText.toLowerCase();
+    let matched = null;
+    for (const trigger of currentClient.triggers) {
+      if (trigger.keys.some(k => lower.includes(k))) { matched = trigger; break; }
+    }
+    const fb = matched ? matched.feedback : currentClient.defaultFeedback;
+    const pts = matched ? 2 : 0;
+    totalScore += pts;
+    showFeedback(fb, pts);
+
+    showTyping(false);
+    addClientMsg(reply);
+    transcript.push(`Client: ${reply}`);
+
+  } catch(e) {
+    console.error("Gemini fetch error:", e);
+    showTyping(false);
+    processWithKeywords(advisorText);
+  }
+}
+
+// Build system prompt from client data for Gemini
+function buildSystemPrompt(c) {
+  return `You are ${c.name}, a real person in a chat with a tarot/psychic advisor. 
+Your type: ${c.type}. Your opening question was: "${c.opening}".
+${c.desc}
+React authentically to what the advisor says. Stay completely in character at all times.
+Never reveal you are an AI. Never break character.`;
+}
+
+// ── ADD MESSAGES ──
+function addAdvisorMsg(text) {
+  const row = document.createElement('div');
+  row.className = 'msg-row advisor-row';
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = text;
+  const time = document.createElement('div');
+  time.className = 'msg-time';
+  time.textContent = getTime();
+  wrap.appendChild(bubble);
+  wrap.appendChild(time);
+  row.appendChild(wrap);
+  insertBefore(row);
+  scrollBottom();
+}
+
+function addClientMsg(text) {
+  const row = document.createElement('div');
+  row.className = 'msg-row client-row';
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;flex-direction:column';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = text;
+  const time = document.createElement('div');
+  time.className = 'msg-time';
+  time.textContent = getTime();
+  wrap.appendChild(bubble);
+  wrap.appendChild(time);
+  row.appendChild(wrap);
+  insertBefore(row);
+  scrollBottom();
+}
+
+function addSysMsg(text, urgent) {
+  const d = document.createElement('div');
+  d.className = 'sys-msg' + (urgent ? ' urgent' : '');
+  d.textContent = text;
+  insertBefore(d);
+  scrollBottom();
+}
+
+function showTyping(show) {
+  document.getElementById('typing').classList.toggle('show', show);
+  if (show) scrollBottom();
+}
+
+function insertBefore(el) {
+  const typing = document.getElementById('typing');
+  document.getElementById('messages').insertBefore(el, typing);
+}
+
+function scrollBottom() {
+  const m = document.getElementById('messages');
+  m.scrollTop = m.scrollHeight;
+}
+
+function getTime() {
+  return new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+}
+
+// ── FEEDBACK SIDEBAR ──
+function showFeedback(fb, pts) {
+  msgFeedbackNum++;
+  const sidebar = document.getElementById('fb-sidebar');
+  const inner = document.getElementById('fb-inner');
+  sidebar.classList.add('open');
+
+  const card = document.createElement('div');
+  card.className = 'fb-card';
+  card.innerHTML = `
+    <span class="fb-n">Message ${msgFeedbackNum}</span>
+    <div class="fb-good">${fb.good}</div>
+    <div class="fb-tip">${fb.tip}</div>`;
+  inner.appendChild(card);
+  inner.scrollTop = inner.scrollHeight;
+}
+
+// ── END SESSION ──
+function endSession() {
+  if (sessionEnded) return;
+  sessionEnded = true;
+  clearInterval(timerInterval);
+
+  document.getElementById('msg-input').disabled = true;
+  document.getElementById('send-btn').disabled = true;
+  showTyping(false);
+  addSysMsg('Session ended');
+
+  // Calculate score out of 100
+  const maxPossible = Math.max(msgCount * 2, 1);
+  const score = Math.min(Math.round((totalScore / maxPossible) * 100), 100);
+
+  // Get analysis
+  const analysis = currentClient.finalAnalysis(transcript, score);
+
+  // Show end screen after brief delay
+  setTimeout(() => {
+    document.getElementById('screen-chat').classList.remove('active');
+    document.getElementById('screen-end').classList.add('active');
+    document.getElementById('end-score').textContent = score;
+
+    const fb = document.getElementById('end-feedback');
+    fb.innerHTML = `
+      <div class="end-feedback-section">
+        <span class="ef-label">What went well</span>
+        <div class="ef-text">${analysis.what_went_well}</div>
+      </div>
+      <div class="end-feedback-section">
+        <span class="ef-label">What to improve</span>
+        <div class="ef-text">${analysis.improve}</div>
+      </div>
+      <div class="end-feedback-section">
+        <span class="ef-label">Key insight</span>
+        <div class="ef-text">${analysis.tip}</div>
+      </div>
+      <div class="end-feedback-section">
+        <span class="ef-label">Session stats</span>
+        <div class="ef-text">Messages sent: ${msgCount} · Client type: ${currentClient.type} · Difficulty: Level ${currentClient.level}/5</div>
+      </div>`;
+  }, 1200);
+}
+
+// ── RESTART ──
+function restartAll() {
+  // Reset state
+  currentClient = null;
+  timeLeft = 180;
+  msgCount = 0;
+  totalScore = 0;
+  sessionEnded = false;
+  urgentSent = false;
+  transcript = [];
+  msgFeedbackNum = 0;
+
+  // Clear messages
+  const msgs = document.getElementById('messages');
+  const typing = document.getElementById('typing');
+  while (msgs.firstChild && msgs.firstChild !== typing) {
+    msgs.removeChild(msgs.firstChild);
+  }
+
+  // Reset feedback sidebar
+  const inner = document.getElementById('fb-inner');
+  inner.innerHTML = '<div class="fb-head">Live Feedback</div>';
+  document.getElementById('fb-sidebar').classList.remove('open');
+
+  // Reset select
+  document.querySelectorAll('.user-card').forEach(c => c.classList.remove('sel'));
+  const btn = document.getElementById('start-btn');
+  btn.disabled = true;
+  btn.textContent = 'Choose a client to begin ◆';
+  document.getElementById('msg-input').value = '';
+  document.getElementById('timer').textContent = '03:00';
+  document.getElementById('timer').classList.remove('urgent');
+
+  // Switch screen
+  document.getElementById('screen-end').classList.remove('active');
+  document.getElementById('screen-select').classList.add('active');
+}
+
+// ── INPUT EVENTS ──
+document.getElementById('msg-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+});
+document.getElementById('msg-input').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+});
+
+// ── INIT ──
+buildCards();
+
+
+</script>
+</body>
+</html>      {
+        // Bio: direct questions about his life
+        keys: ["how old","your age","where are you from","where do you live","married","wife","husband","partner","children","kids","job","work","profession","what do you do","where do you work","family"],
+        replies: [
+          "why do you need to know that.",
+          "...",
+          "why.",
+          "does it matter.",
+          "...",
+        ],
+        feedback: {
+          good: "You're trying to build context.",
+          tip: "Alex won't give you personal information — that's his whole pattern. Don't ask. Demonstrate you already sense something. He'll be more impressed if you name his situation without asking."
+        }
+      },
+
