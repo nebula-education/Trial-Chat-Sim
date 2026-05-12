@@ -622,8 +622,7 @@ GOOD: [sentence]
 TIP: [sentence]
 
 Be specific to what the advisor actually wrote. No intro, no labels other than GOOD: and TIP:` }] }],
-      generationConfig: { maxOutputTokens:100, temperature:0.7 }
-    });
+      generationConfig: { maxOutputTokens: 800, temperature: 0.75 }
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
     const goodMatch = text.match(/GOOD:\s*(.+)/i);
@@ -693,8 +692,7 @@ KEY INSIGHT
 
 TIP FOR NEXT TIME
 [1 concrete actionable thing to try in the next session]` }] }],
-      generationConfig: { maxOutputTokens:350, temperature:0.75 }
-    });
+      generationConfig: { maxOutputTokens: 300, temperature: 0.88 }
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
 
