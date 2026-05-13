@@ -552,9 +552,9 @@ function sendMsg() {
   // Add advisor message to Gemini history
   geminiHistory.push({ role:"user", parts:[{ text }] });
 
-  // Run client reply + feedback in parallel
-  getClientReply(text);
-  getFeedback(text);
+  // FIX 3: Run client reply + feedback in parallel with error catching
+  getClientReply(text).catch(console.error);
+  getFeedback(text).catch(console.error);
 }
 
 // ── CLIENT REPLY via Gemini ──
@@ -567,10 +567,10 @@ async function getClientReply(advisorText) {
 
   try {
     const data = await callGemini({
-     model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash",
       system_instruction: { parts:[{ text: client.systemPrompt + "\n\nPHASE: " + phaseNote + "\n\nIMPORTANT: Reply in 1-3 sentences maximum. Stay completely in character. Never break the fourth wall or admit you are an AI." }] },
       contents: geminiHistory,
-      generationConfig: { maxOutputTokens:120, temperature:0.88 }
+      generationConfig: { maxOutputTokens: 120, temperature: 0.88 }
     });
 
     const reply = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
@@ -605,7 +605,7 @@ async function getFeedback(advisorText) {
 
   try {
     const data = await callGemini({
-     model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash",
       system_instruction: { parts:[{ text:`You are a professional coach evaluating a tarot/psychic advisor in a live practice session.
 Client type: ${client.type} (Level ${client.level}/5) — ${client.desc}
 Be concise, specific and constructive.` }] },
@@ -623,6 +623,7 @@ TIP: [sentence]
 
 Be specific to what the advisor actually wrote. No intro, no labels other than GOOD: and TIP:` }] }],
       generationConfig: { maxOutputTokens: 800, temperature: 0.75 }
+    });
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
     const goodMatch = text.match(/GOOD:\s*(.+)/i);
@@ -666,7 +667,7 @@ async function getFinalFeedback() {
 
   try {
     const data = await callGemini({
-     model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash",
       system_instruction: { parts:[{ text:`You are a professional communication coach evaluating a tarot/psychic advisor's 3-minute practice session.
 Be specific, warm but honest. Focus on what will actually help them improve.` }] },
       contents:[{ role:"user", parts:[{ text:`Evaluate this complete 3-minute practice session.
@@ -692,7 +693,9 @@ KEY INSIGHT
 
 TIP FOR NEXT TIME
 [1 concrete actionable thing to try in the next session]` }] }],
-      generationConfig: { maxOutputTokens: 300, temperature: 0.88 }
+      // FIX 1: збільшено з 300 до 800 щоб не обрізати аналіз
+      generationConfig: { maxOutputTokens: 800, temperature: 0.88 }
+    });
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
 
@@ -706,7 +709,9 @@ TIP FOR NEXT TIME
 
     let html = '';
     sections.forEach(({ key, label }) => {
-      const regex = new RegExp(key + '\\s*\\n([\\s\\S]*?)(?=' + sections.map(s=>s.key).join('|') + '|$)', 'i');
+      // FIX 2: екрановані пробіли в ключах для надійного regex
+      const escapedKeys = sections.map(s => s.key.replace(/ /g, '\\s+')).join('|');
+      const regex = new RegExp(key.replace(/ /g, '\\s+') + '\\s*\\n([\\s\\S]*?)(?=' + escapedKeys + '|$)', 'i');
       const match = text.match(regex);
       const content = match?.[1]?.trim() || '';
       if (content) {
