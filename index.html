@@ -275,7 +275,6 @@ h1,h2,h3{font-family:'Lora',serif}
 // ════════════════════════════════════════════════
 // ↓↓↓ ВСТАВИТИ URL CLOUDFLARE WORKER СЮДИ ↓↓↓
 const PROXY_URL = "https://nebula-gemini.alina-rudenkova.workers.dev";
-// ↑↑↑ Виглядає так: https://nebula-gemini.YOURNAME.workers.dev
 // ════════════════════════════════════════════════
 
 const CLIENTS = [
@@ -443,14 +442,22 @@ let transcript = [];
 let fbCount = 0;
 let geminiHistory = [];
 
-// ── API CALL ──
-async function callGemini(payload) {
-  const res = await fetch(PROXY_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-  return await res.json();
+// ── API CALL з retry ──
+async function callGemini(payload, retries = 2) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const res = await fetch(PROXY_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch(e) {
+      if (i === retries) throw e;
+      await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+    }
+  }
 }
 
 // ── BUILD CLIENT CARDS ──
@@ -500,14 +507,12 @@ function startSession() {
   timerInterval = setInterval(tick, 1000);
   updateTimer();
 
-  // Opening message
   setTimeout(() => {
     showTyping(true);
     setTimeout(async () => {
       showTyping(false);
       addClientMsg(client.opening);
       transcript.push(`Client: ${client.opening}`);
-      // seed history
       geminiHistory.push({ role:"user", parts:[{ text:"[START OF SESSION — send your opening message as the client]" }] });
       geminiHistory.push({ role:"model", parts:[{ text: client.opening }] });
     }, 1000);
@@ -548,13 +553,11 @@ function sendMsg() {
 
   addAdvisorMsg(text);
   transcript.push(`Advisor: ${text}`);
-
-  // Add advisor message to Gemini history
   geminiHistory.push({ role:"user", parts:[{ text }] });
 
-  // FIX 3: Run client reply + feedback in parallel with error catching
+  // відповідь клієнта одразу, фідбек з затримкою 1.5с щоб не перевантажувати API
   getClientReply(text).catch(console.error);
-  getFeedback(text).catch(console.error);
+  setTimeout(() => getFeedback(text).catch(console.error), 1500);
 }
 
 // ── CLIENT REPLY via Gemini ──
@@ -593,7 +596,6 @@ async function getFeedback(advisorText) {
   fbCount++;
   const num = fbCount;
 
-  // Open sidebar and add loading card
   document.getElementById('fb-sidebar').classList.add('open');
   const inner = document.getElementById('fb-inner');
   const card = document.createElement('div');
@@ -693,13 +695,11 @@ KEY INSIGHT
 
 TIP FOR NEXT TIME
 [1 concrete actionable thing to try in the next session]` }] }],
-      // FIX 1: збільшено з 300 до 800 щоб не обрізати аналіз
       generationConfig: { maxOutputTokens: 800, temperature: 0.88 }
     });
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
 
-    // Parse sections
     const sections = [
       { key:"WHAT WENT WELL",   label:"What went well"   },
       { key:"WHAT TO IMPROVE",  label:"What to improve"  },
@@ -709,7 +709,6 @@ TIP FOR NEXT TIME
 
     let html = '';
     sections.forEach(({ key, label }) => {
-      // FIX 2: екрановані пробіли в ключах для надійного regex
       const escapedKeys = sections.map(s => s.key.replace(/ /g, '\\s+')).join('|');
       const regex = new RegExp(key.replace(/ /g, '\\s+') + '\\s*\\n([\\s\\S]*?)(?=' + escapedKeys + '|$)', 'i');
       const match = text.match(regex);
@@ -722,7 +721,6 @@ TIP FOR NEXT TIME
       }
     });
 
-    // Fallback: if parsing failed, show raw text
     if (!html) {
       html = `<div class="ef-section"><div class="ef-text">${text}</div></div>`;
     }
