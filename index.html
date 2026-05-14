@@ -148,31 +148,7 @@ h1,h2,h3{font-family:'Lora',serif}
 #send-btn:disabled{background:var(--cream-10);cursor:not-allowed;transform:none;box-shadow:none}
 #send-btn svg{width:16px;height:16px;fill:white}
 
-/* ── FEEDBACK SIDEBAR ── */
-#fb-sidebar{
-  width:0;flex-shrink:0;overflow:hidden;
-  transition:width .35s cubic-bezier(.4,0,.2,1);
-  border-left:1px solid var(--cream-10);background:var(--navy2);display:flex;flex-direction:column;
-}
-#fb-sidebar.open{width:268px}
-#fb-inner{
-  width:268px;height:100%;overflow-y:auto;padding:18px 16px;
-  display:flex;flex-direction:column;gap:10px;
-  scrollbar-width:thin;scrollbar-color:var(--cream-10) transparent;
-}
-.fb-head{
-  font-size:10px;letter-spacing:2px;text-transform:uppercase;
-  color:var(--cream-40);padding-bottom:10px;border-bottom:1px solid var(--cream-10);
-  flex-shrink:0;
-}
-.fb-card{border-radius:12px;padding:12px 13px;border:1px solid var(--cream-10);background:var(--cream-06);animation:fbSlide .3s ease}
-@keyframes fbSlide{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:translateX(0)}}
-.fb-n{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--cream-40);margin-bottom:7px;display:block}
-.fb-good{font-size:12px;color:#7fffa8;line-height:1.6;margin-bottom:5px;display:flex;gap:6px;align-items:flex-start}
-.fb-good::before{content:'✓';flex-shrink:0;font-weight:700;margin-top:1px}
-.fb-tip{font-size:12px;color:#ffb347;line-height:1.6;display:flex;gap:6px;align-items:flex-start}
-.fb-tip::before{content:'→';flex-shrink:0;margin-top:1px}
-.fb-loading{font-size:12px;color:var(--cream-40);font-style:italic}
+
 
 /* ── END ── */
 #screen-end{
@@ -253,11 +229,7 @@ h1,h2,h3{font-family:'Lora',serif}
       </button>
     </div>
   </div>
-  <div id="fb-sidebar">
-    <div id="fb-inner">
-      <div class="fb-head">Live Feedback</div>
-    </div>
-  </div>
+
 </div>
 
 <!-- END -->
@@ -439,7 +411,6 @@ let msgCount = 0;
 let sessionEnded = false;
 let urgentSent = false;
 let transcript = [];
-let fbCount = 0;
 let geminiHistory = [];
 
 // ── API CALL з retry ──
@@ -555,9 +526,8 @@ function sendMsg() {
   transcript.push(`Advisor: ${text}`);
   geminiHistory.push({ role:"user", parts:[{ text }] });
 
-  // відповідь клієнта одразу, фідбек з затримкою 1.5с щоб не перевантажувати API
+  // тільки відповідь клієнта — фідбек надається вкінці сесії
   getClientReply(text).catch(console.error);
-  setTimeout(() => getFeedback(text).catch(console.error), 1500);
 }
 
 // ── CLIENT REPLY via Gemini ──
@@ -589,58 +559,6 @@ async function getClientReply(advisorText) {
     addClientMsg("...");
     transcript.push(`Client: ...`);
   }
-}
-
-// ── PER-MESSAGE FEEDBACK via Gemini ──
-async function getFeedback(advisorText) {
-  fbCount++;
-  const num = fbCount;
-
-  document.getElementById('fb-sidebar').classList.add('open');
-  const inner = document.getElementById('fb-inner');
-  const card = document.createElement('div');
-  card.className = 'fb-card';
-  card.id = `fb-${num}`;
-  card.innerHTML = `<span class="fb-n">Message ${num}</span><div class="fb-loading">Analysing…</div>`;
-  inner.appendChild(card);
-  inner.scrollTop = inner.scrollHeight;
-
-  try {
-    const data = await callGemini({
-      model: "gemini-2.5-flash",
-      system_instruction: { parts:[{ text:`You are a professional coach evaluating a tarot/psychic advisor in a live practice session.
-Client type: ${client.type} (Level ${client.level}/5) — ${client.desc}
-Be concise, specific and constructive.` }] },
-      contents:[{ role:"user", parts:[{ text:`The advisor just wrote: "${advisorText}"
-The client is: ${client.name} — ${client.type}
-Client's opening question was: "${client.opening}"
-
-Give feedback in exactly 2 short sentences:
-1. What was good about this message (1 sentence)
-2. What to improve or try next (1 sentence)
-
-Format your response as:
-GOOD: [sentence]
-TIP: [sentence]
-
-Be specific to what the advisor actually wrote. No intro, no labels other than GOOD: and TIP:` }] }],
-      generationConfig: { maxOutputTokens: 800, temperature: 0.75 }
-    });
-
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
-    const goodMatch = text.match(/GOOD:\s*(.+)/i);
-    const tipMatch  = text.match(/TIP:\s*(.+)/i);
-    const good = goodMatch?.[1]?.trim() || text.split('\n')[0] || "";
-    const tip  = tipMatch?.[1]?.trim()  || text.split('\n')[1] || "";
-
-    card.innerHTML = `
-      <span class="fb-n">Message ${num}</span>
-      ${good ? `<div class="fb-good">${good}</div>` : ''}
-      ${tip  ? `<div class="fb-tip">${tip}</div>`  : ''}`;
-  } catch(e) {
-    card.innerHTML = `<span class="fb-n">Message ${num}</span><div class="fb-loading">Could not load feedback.</div>`;
-  }
-  inner.scrollTop = inner.scrollHeight;
 }
 
 // ── END SESSION ──
@@ -682,7 +600,10 @@ ${fullTranscript}
 
 Total advisor messages: ${msgCount}
 
-Write a structured analysis with exactly these 4 sections. Use plain text, no markdown:
+Write a structured analysis with EXACTLY these 5 sections. Use plain text only, no markdown, no bullet points:
+
+SCORE
+[A single number from 1 to 10 reflecting overall performance. 1-3 = needs significant work, 4-6 = developing, 7-8 = solid, 9-10 = excellent]
 
 WHAT WENT WELL
 [2-3 sentences about genuine strengths]
@@ -694,11 +615,17 @@ KEY INSIGHT
 [1 sentence — the most important thing to take from this session]
 
 TIP FOR NEXT TIME
-[1 concrete actionable thing to try in the next session]` }] }],
-      generationConfig: { maxOutputTokens: 800, temperature: 0.88 }
+[1 concrete actionable thing to try in the next session]
+
+Keep each section brief and specific. Total response must fit within 400 words.` }] }],
+      generationConfig: { maxOutputTokens: 1200, temperature: 0.88 }
     });
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+
+    // Extract score separately
+    const scoreMatch = text.match(/SCORE\s*\n\s*(\d+)/i);
+    const score = scoreMatch ? parseInt(scoreMatch[1]) : null;
 
     const sections = [
       { key:"WHAT WENT WELL",   label:"What went well"   },
@@ -707,9 +634,18 @@ TIP FOR NEXT TIME
       { key:"TIP FOR NEXT TIME",label:"Tip for next time"},
     ];
 
+    // Show score at top if found
     let html = '';
+    if (score !== null) {
+      const scoreColor = score >= 8 ? '#6FFFB0' : score >= 5 ? '#FFD54F' : '#E8604C';
+      html += `<div class="ef-section" style="text-align:center;padding-bottom:14px;border-bottom:1px solid rgba(240,235,224,.1);margin-bottom:16px">
+        <span class="ef-label">Session Score</span>
+        <div style="font-family:'Lora',serif;font-size:2.8rem;font-style:italic;font-weight:600;color:${scoreColor};line-height:1">${score}<span style="font-size:1.2rem;color:var(--cream-40)">/10</span></div>
+      </div>`;
+    }
+
     sections.forEach(({ key, label }) => {
-      const escapedKeys = sections.map(s => s.key.replace(/ /g, '\\s+')).join('|');
+      const escapedKeys = ['SCORE', ...sections.map(s => s.key)].map(k => k.replace(/ /g, '\\s+')).join('|');
       const regex = new RegExp(key.replace(/ /g, '\\s+') + '\\s*\\n([\\s\\S]*?)(?=' + escapedKeys + '|$)', 'i');
       const match = text.match(regex);
       const content = match?.[1]?.trim() || '';
@@ -788,14 +724,12 @@ function getTime() {
 function restartAll() {
   client = null; timeLeft = 180; msgCount = 0;
   sessionEnded = false; urgentSent = false;
-  transcript = []; fbCount = 0; geminiHistory = [];
+  transcript = []; geminiHistory = [];
 
   const msgs = document.getElementById('messages');
   const typing = document.getElementById('typing');
   while (msgs.firstChild && msgs.firstChild !== typing) msgs.removeChild(msgs.firstChild);
 
-  document.getElementById('fb-inner').innerHTML = '<div class="fb-head">Live Feedback</div>';
-  document.getElementById('fb-sidebar').classList.remove('open');
   document.querySelectorAll('.user-card').forEach(c => c.classList.remove('sel'));
   const btn = document.getElementById('start-btn');
   btn.disabled = true; btn.textContent = 'Choose a client to begin ◆';
